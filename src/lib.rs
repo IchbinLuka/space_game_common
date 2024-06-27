@@ -4,26 +4,26 @@ use aes::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
-pub enum Enemy {
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
+pub enum EnemyType {
     Cruiser,
     Spaceship,
-    Asteroid, 
+    Asteroid,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct ScoreEvent {
-    time: f32, 
-    enemy: Enemy, 
-    pos: (f32, f32)
+    pub time: f32,
+    pub enemy: EnemyType,
+    pub pos: (f32, f32),
 }
 
 impl ScoreEvent {
     pub fn get_score(&self) -> u32 {
         match self.enemy {
-            Enemy::Cruiser => 100,
-            Enemy::Spaceship => 200,
-            Enemy::Asteroid => 50, 
+            EnemyType::Cruiser => 500,
+            EnemyType::Spaceship => 200,
+            EnemyType::Asteroid => 10,
         }
     }
 }
@@ -57,7 +57,7 @@ impl ScoreSubmission {
         let encoded = rmp_serde::to_vec(data).expect("Failed to encode score data");
 
         // Add PKCS5 Padding
-        let padding: u8 = 16 - encoded.len() as u8 % 16 as u8;
+        let padding: u8 = 16 - encoded.len() as u8 % 16_u8;
         let mut blocks: Vec<Block> = encoded
             .chunks(16)
             .map(|block| {
@@ -81,11 +81,7 @@ impl ScoreSubmission {
         let key = GenericArray::from(*encryption_key);
         let cipher = Aes128::new(&key);
 
-        let mut blocks: Vec<Block> = self
-            .0
-            .chunks(16)
-            .map(|block| Block::clone_from_slice(&block))
-            .collect();
+        let mut blocks: Vec<Block> = self.0.chunks(16).map(Block::clone_from_slice).collect();
 
         cipher.decrypt_blocks(&mut blocks);
 
@@ -99,6 +95,7 @@ impl ScoreSubmission {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -108,17 +105,17 @@ mod tests {
         let events = vec![
             ScoreEvent {
                 time: 0.0,
-                enemy: Enemy::Cruiser,
+                enemy: EnemyType::Cruiser,
                 pos: (0.0, 0.0),
             },
             ScoreEvent {
                 time: 1.0,
-                enemy: Enemy::Spaceship,
+                enemy: EnemyType::Spaceship,
                 pos: (1.0, 1.0),
             },
             ScoreEvent {
                 time: 2.0,
-                enemy: Enemy::Asteroid,
+                enemy: EnemyType::Asteroid,
                 pos: (2.0, 2.0),
             },
         ];
