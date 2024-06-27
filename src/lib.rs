@@ -8,11 +8,24 @@ use serde::{Deserialize, Serialize};
 pub enum Enemy {
     Cruiser,
     Spaceship,
+    Asteroid, 
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub enum ScoreEvent {
-    EnemyKilled { enemy: Enemy, pos: (f32, f32) },
+pub struct ScoreEvent {
+    time: f32, 
+    enemy: Enemy, 
+    pos: (f32, f32)
+}
+
+impl ScoreEvent {
+    pub fn get_score(&self) -> u32 {
+        match self.enemy {
+            Enemy::Cruiser => 100,
+            Enemy::Spaceship => 200,
+            Enemy::Asteroid => 50, 
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -93,17 +106,20 @@ mod tests {
     fn test_score_submission() {
         let key = [42u8; 16];
         let events = vec![
-            ScoreEvent::EnemyKilled {
+            ScoreEvent {
+                time: 0.0,
                 enemy: Enemy::Cruiser,
-                pos: (1.0, 2.0),
+                pos: (0.0, 0.0),
             },
-            ScoreEvent::EnemyKilled {
+            ScoreEvent {
+                time: 1.0,
                 enemy: Enemy::Spaceship,
-                pos: (3.0, 4.0),
+                pos: (1.0, 1.0),
             },
-            ScoreEvent::EnemyKilled {
-                enemy: Enemy::Cruiser,
-                pos: (5.0, 6.0),
+            ScoreEvent {
+                time: 2.0,
+                enemy: Enemy::Asteroid,
+                pos: (2.0, 2.0),
             },
         ];
 
